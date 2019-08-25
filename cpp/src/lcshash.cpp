@@ -2,6 +2,7 @@
 #include "hash-table.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -52,11 +53,18 @@ int main(int argc, char* argv[]) {
         transform(G[i].begin(), G[i].end(), G[i].begin(), &nucleotide2int);
     }
 
+    auto start = chrono::steady_clock::now();
+
     triple t = hash_table_search<char>(G[0], G[1], 4);
+
+    auto end = chrono::steady_clock::now();
+    auto time = chrono::duration <double, milli> (end - start).count();
 
     string head = "L: " + to_string(get<0>(t));
     head += " G1: " + to_string(get<1>(t) + 1);
     head += " G2: " + to_string(get<2>(t) + 1);
+    head += " N: " + to_string(n);
+    head += " T: " + to_string(time);
 
     transform(G[0].begin(), G[0].end(), G[0].begin(), &int2nucleotide);
     string subseq = string(G[0].begin() + get<1>(t), G[0].begin() + get<1>(t) + get<0>(t));

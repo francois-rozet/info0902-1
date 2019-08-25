@@ -33,7 +33,7 @@ void fasta_read(const string& filename, vector<string>& heads, vector<string>& s
 void fasta_write(const string& filename, const vector<string>& heads, const vector<string>& seqs) {
     ofstream file;
 
-    file.open(filename);
+    file.open(filename, ios::app);
 
     if (!file.is_open()) {
         cerr << "error: " + filename + ": Cannot write such file" << endl;

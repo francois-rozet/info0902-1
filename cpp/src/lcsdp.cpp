@@ -1,6 +1,7 @@
 #include "fasta.hpp"
 #include "dynamic.hpp"
 
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -24,11 +25,18 @@ int main(int argc, char* argv[]) {
         G.push_back(vector<char>(seqs.back().begin(), seqs.back().begin() + n));
     }
 
+    auto start = chrono::steady_clock::now();
+
     triple t = dynamic_search<char>(G[0], G[1]);
+
+    auto end = chrono::steady_clock::now();
+    auto time = chrono::duration <double, milli> (end - start).count();
 
     string head = "L: " + to_string(get<0>(t));
     head += " G1: " + to_string(get<1>(t) + 1);
     head += " G2: " + to_string(get<2>(t) + 1);
+    head += " N: " + to_string(n);
+    head += " T: " + to_string(time);
 
     string subseq = string(G[0].begin() + get<1>(t), G[0].begin() + get<1>(t) + get<0>(t));
 

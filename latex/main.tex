@@ -6,6 +6,7 @@
 
 \input{./include/libraries/default.tex}
 \input{./include/libraries/informatics.tex}
+\input{./include/libraries/figures.tex}
 \input{./include/libraries/mathematics.tex}
 \input{./include/libraries/units.tex}
 
@@ -47,8 +48,10 @@
 \begin{document}
 	\input{./include/titlepages/default.tex}
 	\romantableofcontents
+	\setcounter{section}{1}
 	\section{Analyse théorique}
-	\subsection{Recherche dichotomique par force brute ou table de hachage}
+	\subsection{Recherche dichotomique par force brute ou table de hachage}\label{sec:dicho_hash}
+	Pour ne pas utiliser d'espace mémoire inutilement, les différents algorithmes retournent des triplets $(l, i, j)$ tels que $l$ est la longueur de la sous-séquence contiguë commune aux séquences $X$ et $Y$ la plus longue et $X[i + k] = Y[j + k]$ pour tout $0 \leq k < l$.
 	\begin{algorithm}[H]
 		\begin{algorithmic}[1]
 			\Function{Dichotomic-Search}{$X, Y$}
@@ -115,7 +118,8 @@
 		\caption{Recherche auxiliaire par force brute}
 		\label{pc:brute_force_aux}
 	\end{algorithm}
-	\vspace{-1em}
+	Pour ne pas perdre la trace de la position des sous-séquences dans $X$, il est nécessaire de la stocker dans la table de hachage. Pour ce faire, on utilise une \emph{map} qui n'est autre qu'une table de hachage dont la fonction d'insertion \textsc{Hash-Insert} prend en entrée une clé en plus de l'élément à stocker. C'est selon cette clé que l'élément est rangé dans la structure de données. \par
+	Dans notre cas, la clé est $f$, l'encodage des sous-séquences, et l'élément est $i$, la position de leur premier élément.
 	\begin{algorithm}[H]
 		\begin{algorithmic}[1]
 			\Function{Hash-Table-Aux1}{$X, Y, l$}
@@ -183,8 +187,9 @@
 		\label{pc:encode}
 	\end{algorithm}
 	\subsection{Fonction de coût}
+	De façon similaire à l'exemple donné dans le cours, la fonction de coût est
 	\begin{equation}
-		C[i,j ] =
+		C[i,j] =
 		\left\{
 		\begin{aligned}
 			& C[i - 1, j - 1] + 1 && \text{si } i, j > 0 \text{ et } X[i] = Y[j] \\
@@ -192,20 +197,22 @@
 		\end{aligned}
 		\right.
 	\end{equation}
+	On notera que le cas $X[i] \neq Y[j]$ est absorbé dans le cas de base.
 	\subsection{Programmation dynamique}
+	Le maximum de la fonction de coût indiquant le dernier élément de la sous-séquence recherchée, il est aisé de trouver cette dernière à partir de la matrice. Cependant, pour éviter de devoir la (re-)parcourir pour trouver son maximum, ce dernier est déterminé pendant la construction.
 	\begin{algorithm}[H]
 		\begin{algorithmic}[1]
 			\Function{Dynamic-Search}{$X, Y$}
-				\State Let $C[0 \ldots X.length,0 \ldots Y.length]$ be a new table
+				\State Let $C[1 \ldots X.length + 1,1 \ldots Y.length + 1]$ be a new table
 				\State $l = 0$
-				\For{$i = 0 \To X.length$}
-					\For{$j = 0 \To Y.length$}
-						\If{$i > 0$ and $j > 0$ and $X[i] == Y[j]$}
+				\For{$i = 1 \To X.length + 1$}
+					\For{$j = 1 \To Y.length + 1$}
+						\If{$i > 1$ and $j > 1$ and $X[i - 1] == Y[j - 1]$}
 							\State $C[i,j] = C[i - 1,j - 1] + 1$
 							\If{$C[i, j] > l$}
 								\State $l = C[i, j]$
-								\State $i_{end} = i$
-								\State $j_{end} = j$
+								\State $i_{end} = i - 1$
+								\State $j_{end} = j - 1$
 							\EndIf
 						\Else{} $C[i,j] = 0$
 						\EndIf
@@ -220,26 +227,26 @@
 		\caption{Recherche par programmation dynamique}
 		\label{pc:dynamic_search}
 	\end{algorithm}
-	\subsection{Complexité}
-	Soit $n$ la longueur des deux séquences et $\alpha n$ la longueur de leur sous-séquence contiguë commune la plus longue.
+	\subsection{Complexité}\label{sec:complexity}
+	Soit $n$ la longueur des deux séquences et $m$ la longueur de leur sous-séquence contiguë commune la plus longue.
 	\begin{enumerate}[label=(\alph*)]
-		\item La solution par force brute est composée de quatre boucles imbriquées. Les boucles initiale et intermédiaires exécutent toujours de l'ordre de $(1 - \alpha) n$ itérations. La boucle finale, quant à elle, en exécute de l'ordre de $\alpha n$. Les opérations à l'intérieur de ces boucles étant toutes $\mathcal{O}(1)$, la complexité en temps est
+		\item La solution par force brute est composée de quatre boucles imbriquées. Les boucles primaire et intermédiaires exécutent toujours de l'ordre de $n - m$ itérations. La boucle finale, quant à elle, en exécute de l'ordre de $m$. Les opérations à l'intérieur de ces boucles étant toutes $\mathcal{O}(1)$, la complexité en temps est
 		\begin{equation}
-			\mathcal{O}\rbk{\alpha (1 - \alpha)^3 n^4} = \mathcal{O}\rbk{n^4}
+			\mathcal{O}\rbk{m (n - m)^3}
 		\end{equation}
-		Néanmoins, lorsque $\alpha n$ tend vers $n$ ($\alpha \to 1$), les trois premières boucles voient leur nombre d'itérations tendre vers $1$. Ainsi, la complexité en temps est $\Omega(n)$. On trouve aussi que $\alpha = \frac{1}{4}$ est le pire cas, bien qu'il soit équivalent au cas moyen en terme de complexité. \par
-		Concernant la complexité en espace, selon ce qu'il a été décidé de renvoyer, elle peut être $\Theta(1)$ ou $\Theta(\alpha n)$. Si la recherche renvoie un triplet $(l,i,j)$ ($l$ la longueur, $i$ l'indice de départ dans $G1$ et $j$ l'indice de départ dans $G2$), la complexité sera $\Theta(1)$. À l'inverse, si la recherche renvoie la sous-séquence sous forme d'une table\footnote{Les pseudo-codes ont été rédigés selon cette politique.}, la complexité sera $\Theta(\alpha n)$.
-		\item Comme la solution par force brute, la recherche dichotomique est composée de quatre boucles imbriquées. Cependant, ici, la boucle initiale s'arrête lorsque un interval de taille $n$ a été divisé \emph{suffisamment} de fois, \cad{} $\log_2(n)$ fois. De plus, les boucles intermédiaires sont maintenant en $\mathcal{O}(n)$. Ainsi, la complexité en temps est
+		Néanmoins, lorsque $m$ tend vers $n$, les trois premières boucles voient leur nombre d'itérations tendre vers $1$. Ainsi, la complexité en temps est $\Omega(n)$. On trouve aussi que $m = \frac{n}{4}$ est le pire cas, bien qu'il soit équivalent au cas moyen en terme de complexité. \par
+		En terme d'espace, cet algorithme n'utilise aucune structure de données supplémentaire aux séquences testées. Dès lors, sa complexité en espace est $\Theta(1)$.
+		\item Comme la solution par force brute, la recherche dichotomique est composée de quatre boucles imbriquées. Cependant, ici, la boucle primaire s'arrête lorsque un interval de taille $n$ a été divisé \emph{suffisamment} de fois, \cad{} $\log_2(n)$ fois. De plus, les boucles intermédiaires sont maintenant $\mathcal{O}(n)$. Ainsi, la complexité en temps est
 		\begin{equation}
-			\mathcal{O}\rbk{\alpha n^3 \log(n)} = \mathcal{O}\rbk{n^3 \log(n)}
+			\mathcal{O}\rbk{m n^2 \log(n)}
 		\end{equation}
-		Pour cette solution, lorsque $\alpha n$ tend vers $n$, les boucles intermédiaires ne voient pas leur nombre d'itérations tendre vers $1$. Cependant, lorsque $\alpha n = 0$, la boucle la plus profonde n'effectue plus qu'une seul itération. Ainsi, la complexité en temps est $\Omega(n^2 \log(n))$. Le pire cas est équivalent au cas moyen. \par
-		Concernant la complexité en espace, cette solution est équivalent à la force brute.
-		\item La solution par table de hachage ne possède que deux boucles imbriquées qui correspondent aux deux premières de la recherche dichotomique. Néanmoins, sans calcul incrémental, l'opération d'encodage exécute $\mathcal{O}(n)$ opérations à chaque appel. On suppose aussi que l'insertion et la lecture dans la table de hachage sont faites en $\mathcal{O}(1)$. Dès lors, la complexité en temps est
+		Pour cette solution, lorsque $m$ tend vers $n$, les boucles intermédiaires ne voient pas leur nombre d'itérations tendre vers $1$, sauf si, en plus, la sous-séquence commune se situe au début des deux séquences testées. Ainsi, la complexité en temps est $\Omega(n \log(n))$. Le pire cas est équivalent au cas moyen. \par
+		Concernant la complexité en espace, cette solution est équivalente à la force brute.
+		\item La solution par table de hachage ne possède que deux boucles imbriquées qui correspondent aux deux premières de la recherche dichotomique. Néanmoins, sans calcul incrémental, l'opération d'encodage exécute $\mathcal{O}(n)$ opérations à chaque appel. En supposant que l'insertion et la lecture dans la table de hachage sont faites en $\mathcal{O}(1)$, la complexité en temps est
 		\begin{equation}
 			\Theta\rbk{n^2 \log(n)}
 		\end{equation}
-		Concernant la complexité en espace, à chaque appel de la fonction auxiliaire pour une taille $l$ de sous-séquence, il est nécessaire d'initialiser une table de hachage sur un univers $U = \{0,1,\ldots,4^l-1\}$ afin d'y stocker $n - l + 1$ sous-séquences. Pour conserver un accès (insertion, recherche et suppression) aux éléments de la table en $\mathcal{O}(1)$, il est nécessaire d'avoir $m = \Omega(n - l)$ où $m$ est sa taille\footnote{Dans le cas d'une table de hachage par adressage direct, la condition $m \geq n - l + 1$ doit aussi être respectée.}. Or, la valeur de départ de $l$ est $\frac{n}{2}$, dès lors, la complexité en espace de la solution par table de hachage est $\Theta(n)$.
+		En terme d'espace, à chaque appel de la fonction auxiliaire pour une taille $l$ de sous-séquence, il est nécessaire d'initialiser une table de hachage sur un univers $U = \{0,1,\ldots,4^l-1\}$ afin d'y stocker $n - l + 1$ sous-séquences. Pour conserver un accès (insertion, recherche et suppression) aux éléments de la table en $\mathcal{O}(1)$, il est nécessaire d'avoir $p = \Omega(n - l)$ où $p$ est sa taille\footnote{Dans le cas d'une table de hachage par adressage direct, la condition $p \geq n - l + 1$ doit aussi être respectée.}. Or, la valeur de départ de $l$ est $\frac{n}{2}$, dès lors, la complexité en espace de la solution par table de hachage est $\Theta(n)$.
 		\item Avec le calcul incrémental, l'encodage ne demande plus que $\mathcal{O}(1)$ opérations par appel. Ainsi, la complexité en temps devient
 		\begin{equation}
 			\Theta\rbk{n \log(n)}
@@ -249,7 +256,48 @@
 		\begin{equation}
 			\Theta\rbk{n^2}
 		\end{equation}
-		Concernant la complexité en espace, la matrice de coût possède $(n + 1)^2$ éléments. La complexité spatiale est donc aussi $\Theta\rbk{n^2}$.
+		De plus, la matrice de coût possèdant $(n + 1)^2$ éléments, la complexité spatiale est aussi $\Theta\rbk{n^2}$.
 	\end{enumerate}
+	\section{Implémentation}
+	Les algorithmes ayant été implémentés à l'aide du language \texttt{C++}, il est nécessaire de les compiler pour obtenir des programes exécutables. Par simplicité, le processus de compilation a été automatisé à l'aide d'un \texttt{Makefile} qui construit, par défaut, les exécutables \texttt{lcsdicho}, \texttt{lcshash} et \texttt{lcsdp}. \par
+	Ces derniers prennent en entrée, comme demandé, deux fichiers contenant des séquences génomiques et le nombre de nucléotides à prendre en compte. Cependant, afin de pouvoir mesurer plus facilement les performances des différents algorithmes, le nombre de nucléotides considérés \texttt{NNN} ainsi que le temps de calcul \texttt{TTT} ont été rajoutés à l'entête des fichiers FASTA renvoyés.
+	\begin{center}
+		\texttt{> L: XXX G1: YYY G2: ZZZ N: NNN T: TTT}
+	\end{center}
+	De plus, si le fichier FASTA ciblé existe déjà, la nouvelle sous-séquence sera ajoutée à la fin du fichier. \par
+	Aussi, pour ne pas restreindre l'application des algorithmes aux séquences génomiques, ils ont été implémentés de manière \emph{générique}, \cad{} en tant que \emph{template}.
+	\subsubsection*{Table de hachage}
+	Comme il a été discuté dans la section \ref{sec:dicho_hash}, la table de hachage utilisée est une \emph{map}. Dans le language \texttt{C++}, cette dernière est pre-implémentée dans la bibliothèque standard sous le nom de \texttt{unordered\_map}. De plus, la longueur $p$ de cette table est fixée à $n - l + 1$ ce qui vérifie toujours $p = \Omega(n - l)$ (cf. section \ref{sec:complexity}).
+	\subsubsection*{Programmation dynamique}
+	Pour ne pas devoir gérer manuellement l'allocation (et désallocation) de mémoire de la table $C$, cette dernière est initialisée en tant que pointeur intelligent (\emph{smart pointer}), lui aussi pre-implémenté dans la bibliothèque standard.
+	\newpage
+	\section{Analyse empirique}
+	\subsubsection*{Recherche dichotomique}
+	Bien que la courbe ne soit pas parfaitement lisse, on devine à la Figure \ref{fig:dichotomic} une relation d'ordre $2$.
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.65\textwidth]{resources/pdf/dichotomic.pdf}
+		\noskipcaption{Évolution du temps de calcul de la recherche dichotomique par force brute en fonction de la taille des séquences.}
+		\label{fig:dichotomic}
+	\end{figure}
+	Or, d'après l'analyse théorique (cf. section \ref{sec:complexity}), la complexité de la recherche dichotomique par force brute devrait être $\mathcal{O}\rbk{m n^2 \log(n)}$. Cependant, si l'on se penche sur les données collectées, il apparaît que le facteur $m$ est quasiment constant. De plus, $\log(n)$ varie assez peu sur l'interval $[0, 5000]$. Il ne serait donc pas étonnant de confondre les deux relations.
+	\subsubsection*{Table de hachage}
+	Encore une fois, si la courbe comporte beaucoup de bruit\footnote{L'algorithme étant particulièrement rapide, la mesure de son temps de calcul est fort sensible aux perturbations causées par les autres processus du système.}, une relation d'ordre $1$ reste discernable à la Figure \ref{fig:hash}.
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.65\textwidth]{resources/pdf/hash.pdf}
+		\noskipcaption{Évolution du temps de calcul de la recherche dichotomique par table de hachage en fonction de la taille des séquences.}
+		\label{fig:hash}
+	\end{figure}
+	Selon l'analyse théorique, la complexité de la recherche dichotomique par table de hachage (avec calcul incrémental) devrait être $\Theta\rbk{n \log(n)}$. Mais, puisque ici aussi, le facteur $\log(n)$ varie peu sur l'interval $[0, 5000]$, il n'est pas surprenant d'observer ce qui semble être une relation d'ordre $1$.
+	\subsubsection*{Programmation dynamique}
+	Une fois de plus, une relation d'ordre $2$ est aisément reconnaissable à la Figure \ref{fig:dynamic}.
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.65\textwidth]{resources/pdf/dynamic.pdf}
+		\noskipcaption{Évolution du temps de calcul de la recherche par programmation dynamique en fonction de la taille des séquences.}
+		\label{fig:dynamic}
+	\end{figure}
+	Cette observation correspond à la complexité théorique, à savoir $\Theta\rbk{n^2}$.
 	\newpage
 \end{document}
