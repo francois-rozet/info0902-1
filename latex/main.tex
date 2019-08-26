@@ -1,0 +1,255 @@
+\documentclass[a4paper, 12pt]{article}
+
+\def\languages{english, french}
+
+%%%%%%%%%%%%%%%%%%% Libraries
+
+\input{./include/libraries/default.tex}
+\input{./include/libraries/informatics.tex}
+\input{./include/libraries/mathematics.tex}
+\input{./include/libraries/units.tex}
+
+%%%%%%%%%%%%%%%%%%% Titlepage
+
+\def\logopath{./resources/pdf/logo.pdf}
+\def\toptitle{Université de Liège}
+\title{Recherche de motifs dans \\[0.25em] des séquences d'ADN}
+\def\subtitle{INFO0902-1 -- Structure de données et algorithmes}
+%\def\authorhead{}
+\author{François \textsc{Rozet} (s161024)\\}
+%\def\rightauthorhead{}
+%\def\rightauthor{}
+\def\context{Bachelier Ingénieur civil}
+\date{Année académique 2018-2019}
+
+%%%%%%%%%%%%%%%%%%%
+
+\usepackage[ruled]{algorithm}
+\usepackage[noend]{algpseudocode}
+
+\floatname{algorithm}{Pseudo-code}
+
+\algrenewcommand\alglinenumber[1]{\footnotesize #1}
+
+\newcommand{\algorithmicerror}{\textbf{error}}
+\newcommand{\Error}{\algorithmicerror{}}
+
+\newcommand{\algorithmicbreak}{\textbf{break}}
+\newcommand{\Break}{\algorithmicbreak{}}
+
+\renewcommand{\algorithmiccomment}[1]{// #1}
+
+\newcommand{\To}{\textbf{ to }}
+\renewcommand{\Call}[2]{\textsc{#1}(#2)}
+
+%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+	\input{./include/titlepages/default.tex}
+	\romantableofcontents
+	\section{Analyse théorique}
+	\subsection{Recherche dichotomique par force brute ou table de hachage}
+	\begin{algorithm}[H]
+		\begin{algorithmic}[1]
+			\Function{Dichotomic-Search}{$X, Y$}
+				\State $t = NIL$
+				\State $p = 1; \, r = \min(X.length, Y.length)$
+				\While{$p \leq r$}
+					\State $q = \left\lfloor \frac{p + r}{2} \right\rfloor$
+					\State $s = $ \Call{Brute-Force-Aux}{$X, Y, q$}
+					\If{$s \neq NIL$}
+						\State $p = q + 1$
+					\Else
+						\State $r = q - 1$
+						\State $t = s$
+					\EndIf
+				\EndWhile
+				\State \Return $t$
+			\EndFunction
+		\end{algorithmic}
+		\caption{Recherche dichotomique par force brute}
+		\label{pc:dichotomic_search}
+	\end{algorithm}
+	\vspace{-1em}
+	\begin{algorithm}[H]
+		\begin{algorithmic}[1]
+			\Function{Hash-Table-Search}{$X, Y$}
+				\State $t = NIL$
+				\State $p = 1; \, r = \min(X.length, Y.length)$
+				\While{$p \leq r$}
+					\State $q = \left\lfloor \frac{p + r}{2} \right\rfloor$
+					\State $s = $ \Call{Hash-Table-Aux}{$X, Y, q$}
+					\If{$s \neq NIL$}
+						\State $p = q + 1$
+					\Else
+						\State $r = q - 1$
+						\State $t = s$
+					\EndIf
+				\EndWhile
+				\State \Return $t$
+			\EndFunction
+		\end{algorithmic}
+		\caption{Recherche dichotomique par table de hachage}
+		\label{pc:hash_table_search}
+	\end{algorithm}
+	\vspace{-1em}
+	\begin{algorithm}[H]
+		\begin{algorithmic}[1]
+			\Function{Brute-Force-Aux}{$X, Y, l$}
+				\For{$i = 1 \To  X.length - l + 1$}
+					\For{$j = 1 \To Y.length - l + 1$}
+						\For{$k = 1 \To l$}
+							\If{$X[i + k - 1] \neq Y[j + k - 1]$}
+								\State $k = 0$
+								\State \Break
+							\EndIf
+						\EndFor
+						\If{$k \neq 0$}
+							\State \Return $(l, i, j)$
+						\EndIf
+					\EndFor
+				\EndFor
+				\State \Return $NIL$
+			\EndFunction
+		\end{algorithmic}
+		\caption{Recherche auxiliaire par force brute}
+		\label{pc:brute_force_aux}
+	\end{algorithm}
+	\vspace{-1em}
+	\begin{algorithm}[H]
+		\begin{algorithmic}[1]
+			\Function{Hash-Table-Aux1}{$X, Y, l$}
+				\State Let $H$ be a new hash table
+				\For{$i = 1 \To X.length - l + 1$}
+					\State $f = $ \Call{Encode}{$X, i, l$}
+					\State \Call{Hash-Insert}{$H, f, i$}
+				\EndFor
+				\For{$j = 1 \To Y.length - l + 1$}
+					\State $f = $ \Call{Encode}{$Y, j, l$}
+					\State $i = $ \Call{Hash-Search}{$H, f$}
+					\If{$i \neq NIL$}
+						\State \Return $(l, i, j)$
+					\EndIf
+				\EndFor
+				\State \Return $NIL$
+			\EndFunction
+		\end{algorithmic}
+		\caption{Recherche auxiliaire par table de hachage sans calcul incrémental}
+		\label{pc:hash_table_aux1}
+	\end{algorithm}
+	\vspace{-1em}
+	\begin{algorithm}[H]
+		\begin{algorithmic}[1]
+			\Function{Hash-Table-Aux2}{$X, Y, l$}
+				\State Let $H$ be a new hash table
+				\State $b = 4; \, p = b^{l-1}$
+				\State $f = $ \Call{Encode}{$X, 1, l$}
+				\State \Call{Hash-Insert}{$H, f, 1$}
+				\For{$i = 2 \To X.length - l + 1$}
+					\State $f = (f - X[i - 1] \cdot p) \cdot b + X[i + l - 1]$
+					\State \Call{Hash-Insert}{$H, f, i$}
+				\EndFor
+				\State $f = $ \Call{Encode}{$Y, 1, l$}
+				\State $i = $ \Call{Hash-Search}{$H, f$}
+				\If{$i \neq NIL$}
+					\State \Return $(l, i, 1)$
+				\EndIf
+				\For{$j = 2 \To Y.length - l + 1$}
+					\State $f = (f - Y[j - 1] \cdot p) \cdot b + Y[j + l - 1]$
+					\State $i = $ \Call{Hash-Search}{$H, f$}
+					\If{$i \neq NIL$}
+						\State \Return $(l, i, j)$
+					\EndIf
+				\EndFor
+				\State \Return $NIL$
+			\EndFunction
+		\end{algorithmic}
+		\caption{Recherche auxiliaire par table de hachage avec calcul incrémental}
+		\label{pc:hash_table_aux2}
+	\end{algorithm}
+	\vspace{-1em}
+	\begin{algorithm}[H]
+		\begin{algorithmic}[1]
+			\Function{Encode}{$X, i, l$}
+				\State $b = 4$
+				\State $f = 0$
+				\For{$j = 1 \To l$}
+					\State $f = f \cdot b + X[i + j - 1]$
+				\EndFor
+				\State \Return $f$
+			\EndFunction
+		\end{algorithmic}
+		\caption{Fonction d'encodage}
+		\label{pc:encode}
+	\end{algorithm}
+	\subsection{Fonction de coût}
+	\begin{equation}
+		C[i,j ] =
+		\left\{
+		\begin{aligned}
+			& C[i - 1, j - 1] + 1 && \text{si } i, j > 0 \text{ et } X[i] = Y[j] \\
+			& 0  && \text{sinon} \\
+		\end{aligned}
+		\right.
+	\end{equation}
+	\subsection{Programmation dynamique}
+	\begin{algorithm}[H]
+		\begin{algorithmic}[1]
+			\Function{Dynamic-Search}{$X, Y$}
+				\State Let $C[0 \ldots X.length,0 \ldots Y.length]$ be a new table
+				\State $l = 0$
+				\For{$i = 0 \To X.length$}
+					\For{$j = 0 \To Y.length$}
+						\If{$i > 0$ and $j > 0$ and $X[i] == Y[j]$}
+							\State $C[i,j] = C[i - 1,j - 1] + 1$
+							\If{$C[i, j] > l$}
+								\State $l = C[i, j]$
+								\State $i_{end} = i$
+								\State $j_{end} = j$
+							\EndIf
+						\Else{} $C[i,j] = 0$
+						\EndIf
+					\EndFor
+				\EndFor
+				\If{$l \neq 0$}
+					\State \Return $(l, i_{end} - l + 1, j_{end} - l + 1)$
+				\EndIf
+				\State \Return $NIL$
+			\EndFunction
+		\end{algorithmic}
+		\caption{Recherche par programmation dynamique}
+		\label{pc:dynamic_search}
+	\end{algorithm}
+	\subsection{Complexité}
+	Soit $n$ la longueur des deux séquences et $\alpha n$ la longueur de leur sous-séquence contiguë commune la plus longue.
+	\begin{enumerate}[label=(\alph*)]
+		\item La solution par force brute est composée de quatre boucles imbriquées. Les boucles initiale et intermédiaires exécutent toujours de l'ordre de $(1 - \alpha) n$ itérations. La boucle finale, quant à elle, en exécute de l'ordre de $\alpha n$. Les opérations à l'intérieur de ces boucles étant toutes $\mathcal{O}(1)$, la complexité en temps est
+		\begin{equation}
+			\mathcal{O}\rbk{\alpha (1 - \alpha)^3 n^4} = \mathcal{O}\rbk{n^4}
+		\end{equation}
+		Néanmoins, lorsque $\alpha n$ tend vers $n$ ($\alpha \to 1$), les trois premières boucles voient leur nombre d'itérations tendre vers $1$. Ainsi, la complexité en temps est $\Omega(n)$. On trouve aussi que $\alpha = \frac{1}{4}$ est le pire cas, bien qu'il soit équivalent au cas moyen en terme de complexité. \par
+		Concernant la complexité en espace, selon ce qu'il a été décidé de renvoyer, elle peut être $\Theta(1)$ ou $\Theta(\alpha n)$. Si la recherche renvoie un triplet $(l,i,j)$ ($l$ la longueur, $i$ l'indice de départ dans $G1$ et $j$ l'indice de départ dans $G2$), la complexité sera $\Theta(1)$. À l'inverse, si la recherche renvoie la sous-séquence sous forme d'une table\footnote{Les pseudo-codes ont été rédigés selon cette politique.}, la complexité sera $\Theta(\alpha n)$.
+		\item Comme la solution par force brute, la recherche dichotomique est composée de quatre boucles imbriquées. Cependant, ici, la boucle initiale s'arrête lorsque un interval de taille $n$ a été divisé \emph{suffisamment} de fois, \cad{} $\log_2(n)$ fois. De plus, les boucles intermédiaires sont maintenant en $\mathcal{O}(n)$. Ainsi, la complexité en temps est
+		\begin{equation}
+			\mathcal{O}\rbk{\alpha n^3 \log(n)} = \mathcal{O}\rbk{n^3 \log(n)}
+		\end{equation}
+		Pour cette solution, lorsque $\alpha n$ tend vers $n$, les boucles intermédiaires ne voient pas leur nombre d'itérations tendre vers $1$. Cependant, lorsque $\alpha n = 0$, la boucle la plus profonde n'effectue plus qu'une seul itération. Ainsi, la complexité en temps est $\Omega(n^2 \log(n))$. Le pire cas est équivalent au cas moyen. \par
+		Concernant la complexité en espace, cette solution est équivalent à la force brute.
+		\item La solution par table de hachage ne possède que deux boucles imbriquées qui correspondent aux deux premières de la recherche dichotomique. Néanmoins, sans calcul incrémental, l'opération d'encodage exécute $\mathcal{O}(n)$ opérations à chaque appel. On suppose aussi que l'insertion et la lecture dans la table de hachage sont faites en $\mathcal{O}(1)$. Dès lors, la complexité en temps est
+		\begin{equation}
+			\Theta\rbk{n^2 \log(n)}
+		\end{equation}
+		Concernant la complexité en espace, à chaque appel de la fonction auxiliaire pour une taille $l$ de sous-séquence, il est nécessaire d'initialiser une table de hachage sur un univers $U = \{0,1,\ldots,4^l-1\}$ afin d'y stocker $n - l + 1$ sous-séquences. Pour conserver un accès (insertion, recherche et suppression) aux éléments de la table en $\mathcal{O}(1)$, il est nécessaire d'avoir $m = \Omega(n - l)$ où $m$ est sa taille\footnote{Dans le cas d'une table de hachage par adressage direct, la condition $m \geq n - l + 1$ doit aussi être respectée.}. Or, la valeur de départ de $l$ est $\frac{n}{2}$, dès lors, la complexité en espace de la solution par table de hachage est $\Theta(n)$.
+		\item Avec le calcul incrémental, l'encodage ne demande plus que $\mathcal{O}(1)$ opérations par appel. Ainsi, la complexité en temps devient
+		\begin{equation}
+			\Theta\rbk{n \log(n)}
+		\end{equation}
+		La complexité en espace n'a, quant à elle, pas changé.
+		\item La solution par programmation dynamique n'utilise que deux boucles impbriquées itérant sur l'entièreté des séquences. Dès lors, la complexité en temps est
+		\begin{equation}
+			\Theta\rbk{n^2}
+		\end{equation}
+		Concernant la complexité en espace, la matrice de coût possède $(n + 1)^2$ éléments. La complexité spatiale est donc aussi $\Theta\rbk{n^2}$.
+	\end{enumerate}
+	\newpage
+\end{document}
