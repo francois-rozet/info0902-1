@@ -46,11 +46,7 @@ triple brute_force_aux(const std::vector<T>& X, const std::vector<T>& Y, size_t 
 
     for (size_t i = 0; i < X.size() - l + 1; i++)
         for (size_t j = 0; j < Y.size() - l + 1; j++) {
-            size_t k;
-
-            for (k = 0; k < l and X[i + k] == Y[j + k]; k++);
-
-            if (k == l)
+            if (isCommon(X, Y, l, i, j))
                 return std::make_tuple(l, i, j);
         }
 

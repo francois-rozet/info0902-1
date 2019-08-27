@@ -57,24 +57,28 @@ triple hash_table_aux(const std::vector<T>& X, const std::vector<T>& Y, int base
     assert(X.size() >= l);
     assert(Y.size() >= l);
 
-    std::unordered_map<uintmax_t, size_t> H(X.size() - l + 1);
+    std::unordered_multimap<uintmax_t, size_t> H(X.size() - l + 1);
 
     uintmax_t p = pow(base, l - 1);
 
     uintmax_t f = encode<T>(X, 0, base, l);
-    H[f] = 0;
+    H.insert({f, 0});
     for (size_t i = 1; i < X.size() - l + 1; i++) {
         f = (f - X[i - 1] * p) * base + X[i + l - 1];
-        H[f] = i;
+        H.insert({f, i});
     }
 
     f = encode<T>(Y, 0, base, l);
-    if (H.count(f) > 0)
-        return std::make_tuple(l, H[f], 0);
+    auto range = H.equal_range(f);
+    for (auto it = range.first; it != range.second; it++)
+        if (isCommon(X, Y, l, it->second, 0))
+            return std::make_tuple(l, it->second, 0);
     for (size_t j = 1; j < Y.size() - l + 1; j++) {
         f = (f - Y[j - 1] * p) * base + Y[j + l - 1];
-        if (H.count(f) > 0)
-            return std::make_tuple(l, H[f], j);
+        auto range = H.equal_range(f);
+        for (auto it = range.first; it != range.second; it++)
+            if (isCommon(X, Y, l, it->second, j))
+                return std::make_tuple(l, it->second, 0);
     }
 
     return std::make_tuple(0, 0, 0);
@@ -86,8 +90,8 @@ uintmax_t encode(const std::vector<T>& X, size_t i, int base, size_t l) {
 
     uintmax_t f = 0;
 
-    for (size_t j = 0; j < l; j++)
-        f = f * base + X[i + j];
+    for (size_t k = 0; k < l; k++)
+        f = f * base + X[i + k];
 
     return f;
 }

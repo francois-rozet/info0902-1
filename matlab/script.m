@@ -62,3 +62,29 @@ xlabel('Sequences length [-]');
 ylabel('Computation time [ms]');
 
 saveas(gcf, 'pdf/dynamic.pdf');
+
+% All
+
+figure('Name', 'all', 'Position', [100 100 900 600]);
+
+table = data(string(data.algorithm) == "dicho", :);
+plot(table.n, table.time);
+
+hold on
+table = data(string(data.algorithm) == "hash", :);
+plot(table.n, table.time);
+
+table = data(string(data.algorithm) == "dp", :);
+plot(table.n, table.time);
+hold off
+
+grid on; 
+
+xlabel('Sequences length [-]');
+ylabel('Computation time [ms]');
+
+legend({'Dichotomic'; 'Hash'; 'Dynamic'}, 'Interpreter', 'latex', 'Location', 'NorthWest');
+
+saveas(gcf, 'pdf/all.pdf');
+
+leg

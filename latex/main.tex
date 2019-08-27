@@ -257,6 +257,7 @@
 			\Theta\rbk{n^2}
 		\end{equation}
 		De plus, la matrice de coût possèdant $(n + 1)^2$ éléments, la complexité spatiale est aussi $\Theta\rbk{n^2}$.
+		\paragraph{Remarque} Il est possible d'implémenter cet algorithme en ne gardant en mémoire qu'une seule ligne de la matrice de coût. La complexité en espace en devient $\Theta\rbk{n}$.
 	\end{enumerate}
 	\section{Implémentation}
 	Les algorithmes ayant été implémentés à l'aide du language \texttt{C++}, il est nécessaire de les compiler pour obtenir des programes exécutables. Par simplicité, le processus de compilation a été automatisé à l'aide d'un \texttt{Makefile} qui construit, par défaut, les exécutables \texttt{lcsdicho}, \texttt{lcshash} et \texttt{lcsdp}. \par
@@ -267,34 +268,44 @@
 	De plus, si le fichier FASTA ciblé existe déjà, la nouvelle sous-séquence sera ajoutée à la fin du fichier. \par
 	Aussi, pour ne pas restreindre l'application des algorithmes aux séquences génomiques, ils ont été implémentés de manière \emph{générique}, \cad{} en tant que \emph{template}.
 	\subsubsection*{Table de hachage}
-	Comme il a été discuté dans la section \ref{sec:dicho_hash}, la table de hachage utilisée est une \emph{map}. Dans le language \texttt{C++}, cette dernière est pre-implémentée dans la bibliothèque standard sous le nom de \texttt{unordered\_map}. De plus, la longueur $p$ de cette table est fixée à $n - l + 1$ ce qui vérifie toujours $p = \Omega(n - l)$ (cf. section \ref{sec:complexity}).
+	Comme il a été discuté dans la section \ref{sec:dicho_hash}, la table de hachage utilisée est une \emph{map}. Dans le language \texttt{C++}, cette dernière est pre-implémentée dans la librairie standard sous le nom de \texttt{unordered\_multimap}. De plus, la longueur $p$ de cette table est fixée à $n - l + 1$ ce qui vérifie toujours $p = \Omega(n - l)$ (cf. section \ref{sec:complexity}). \par
+	Dans la librairie standard, le plus grand entier positif représentable est $2^{64} - 1$. Il est donc possible que la fonction d'encodage retourne la même valeur pour deux séquences génomiques différentes. Dès lors, après la recherche dans la table de hachage (cf. ligne 15 du Pseudo-code \ref{pc:hash_table_aux2}), il est nécessaire de vérifier la compatibilité des deux sous-séquences, même si leur encodage est équivalent.
 	\subsubsection*{Programmation dynamique}
-	Pour ne pas devoir gérer manuellement l'allocation (et désallocation) de mémoire de la table $C$, cette dernière est initialisée en tant que pointeur intelligent (\emph{smart pointer}), lui aussi pre-implémenté dans la bibliothèque standard.
+	Pour ne pas devoir gérer manuellement l'allocation (et désallocation) de mémoire de la table $C$, cette dernière est initialisée en tant que pointeur intelligent (\emph{smart pointer}), lui aussi pre-implémenté dans la librairie standard.
 	\newpage
 	\section{Analyse empirique}
+	La performance des algorithmes a été mesurée sur des séquences de longueur comprise dans l'interval $[0, 10^4]$. Chaque longueur testée l'a été $5$ fois afin d'obtenir un temps de calcul moyen, moins sujet aux perturbations causées par les autres processus du système.
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.68\textwidth]{resources/pdf/all.pdf}
+		\noskipcaption{Évolution du temps de calcul des différents algorithmes en fonction de la taille des séquences.}
+		\label{fig:all}
+	\end{figure}
+	En terme de performances brutes, la recherche dichotomique par table de hachage est très clairement le meilleur algorithme. Entre la recherche dichotomique et la programmation dynamique, l'ordre de grandeur semble être le même et, si le second est significativement plus rapide, il ne faut pas oublier que sa complexité en espace est beaucoup plus élevée.
+	\newpage
 	\subsubsection*{Recherche dichotomique}
 	Bien que la courbe ne soit pas parfaitement lisse, on devine à la Figure \ref{fig:dichotomic} une relation d'ordre $2$.
 	\begin{figure}[H]
 		\centering
-		\includegraphics[width=0.65\textwidth]{resources/pdf/dichotomic.pdf}
+		\includegraphics[width=0.68\textwidth]{resources/pdf/dichotomic.pdf}
 		\noskipcaption{Évolution du temps de calcul de la recherche dichotomique par force brute en fonction de la taille des séquences.}
 		\label{fig:dichotomic}
 	\end{figure}
-	Or, d'après l'analyse théorique (cf. section \ref{sec:complexity}), la complexité de la recherche dichotomique par force brute devrait être $\mathcal{O}\rbk{m n^2 \log(n)}$. Cependant, si l'on se penche sur les données collectées, il apparaît que le facteur $m$ est quasiment constant. De plus, $\log(n)$ varie assez peu sur l'interval $[0, 5000]$. Il ne serait donc pas étonnant de confondre les deux relations.
+	Or, d'après l'analyse théorique (cf. section \ref{sec:complexity}), la complexité de la recherche dichotomique par force brute devrait être $\mathcal{O}\rbk{m n^2 \log(n)}$. Cependant, si l'on se penche sur les données collectées, il apparaît que le facteur $m$ est quasiment constant. De plus, $\log(n)$ varie assez peu sur l'interval $[0, 10^4]$. Il ne serait donc pas étonnant de confondre les deux relations à l'oeil nu.
 	\subsubsection*{Table de hachage}
 	Encore une fois, si la courbe comporte beaucoup de bruit\footnote{L'algorithme étant particulièrement rapide, la mesure de son temps de calcul est fort sensible aux perturbations causées par les autres processus du système.}, une relation d'ordre $1$ reste discernable à la Figure \ref{fig:hash}.
 	\begin{figure}[H]
 		\centering
-		\includegraphics[width=0.65\textwidth]{resources/pdf/hash.pdf}
+		\includegraphics[width=0.68\textwidth]{resources/pdf/hash.pdf}
 		\noskipcaption{Évolution du temps de calcul de la recherche dichotomique par table de hachage en fonction de la taille des séquences.}
 		\label{fig:hash}
 	\end{figure}
-	Selon l'analyse théorique, la complexité de la recherche dichotomique par table de hachage (avec calcul incrémental) devrait être $\Theta\rbk{n \log(n)}$. Mais, puisque ici aussi, le facteur $\log(n)$ varie peu sur l'interval $[0, 5000]$, il n'est pas surprenant d'observer ce qui semble être une relation d'ordre $1$.
+	Selon l'analyse théorique, la complexité de la recherche dichotomique par table de hachage (avec calcul incrémental) devrait être $\Theta\rbk{n \log(n)}$. Mais, puisque ici aussi, le facteur $\log(n)$ varie peu sur l'interval $[0, 10^4]$, il n'est pas surprenant d'observer ce qui semble être une relation d'ordre $1$.
 	\subsubsection*{Programmation dynamique}
 	Une fois de plus, une relation d'ordre $2$ est aisément reconnaissable à la Figure \ref{fig:dynamic}.
 	\begin{figure}[H]
 		\centering
-		\includegraphics[width=0.65\textwidth]{resources/pdf/dynamic.pdf}
+		\includegraphics[width=0.68\textwidth]{resources/pdf/dynamic.pdf}
 		\noskipcaption{Évolution du temps de calcul de la recherche par programmation dynamique en fonction de la taille des séquences.}
 		\label{fig:dynamic}
 	\end{figure}

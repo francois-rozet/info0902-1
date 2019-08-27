@@ -13,7 +13,7 @@ G2 = "../cpp/resources/fasta/g2.fa"
 
 m = 5
 
-for n in range(0, 5001, 100):
+for n in range(0, 10001, 100):
 	for j in range(0, len(alg)):
 		try:
 			for k in range(0, m):
