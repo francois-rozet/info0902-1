@@ -9,3 +9,7 @@ Projet réalisé dans le cadre du cours *Structures de données et algorithmes* 
 ## Auteurs
 
 * **François Rozet** - [Donshel](https://github.com/Donshel)
+
+## Note
+
+Ce projet a reçu la note de 19.5/20.
