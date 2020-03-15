@@ -8,7 +8,7 @@ Projet réalisé dans le cadre du cours *Structures de données et algorithmes* 
 
 ## Auteurs
 
-* **François Rozet** - [Donshel](https://github.com/Donshel)
+* **François Rozet** - [francois-rozet](https://github.com/francois-rozet)
 
 ## Note
 
